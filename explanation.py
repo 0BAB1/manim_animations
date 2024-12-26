@@ -128,7 +128,7 @@ class Explanation(Scene):
 
         part1 = VGroup(pc, i_mem, l)
         self.play(part1.animate.scale(0.65))
-        self.play(part1.animate.shift([-3, 0, 0]))
+        self.play(part1.animate.shift([-3.5, 0, 0]))
 
         fetch_stage = VGroup(pc, i_mem, l)
 
@@ -304,7 +304,7 @@ class Explanation(Scene):
         d_in_wire = VGroup(connection_circle, l1, l2, l3, l4)
         self.play(Create(d_in_wire))
 
-        # or read
+        # or read !
 
         p1 = d_mem[4].get_edge_center(RIGHT) + [0.1, 0, 0]
         p2 = p1 + [0.4, 0, 0]
@@ -322,6 +322,39 @@ class Explanation(Scene):
         self.play(Create(wb_wire))
 
         # or write back !
-        self.play(Uncreate(wb_wire[0]), wb_wire[1])
+        self.play(Uncreate(wb_wire[0]), Uncreate(wb_wire[1]))
+
+        mux = create_mux(self, [6, 0, 0])
+        self.play(Create(mux))
+
+        p1 = addr_wire[1].get_end()  # alu to mux wires
+        p2 = p1 + [0, 1.5, 0]
+        p3 = p2 + [2.15, 0, 0]
+        p5 = mux.get_edge_center(LEFT) + [0, 0.3, 0]
+        p4 = [p3[0], p5[1], 0]
+        l1 = Line(p1, p2)
+        l2 = Line(p2, p3)
+        l3 = Line(p3, p4)
+        l4 = Line(p4, p5)
+        connection_circle = Circle(
+            0.05, WHITE, fill_color=WHITE, fill_opacity=1).move_to(p1)
+        alu_mux_wire = VGroup(connection_circle, l1, l2, l3, l4)
+        self.play(Create(alu_mux_wire))
+
+        p1 = d_mem[4].get_edge_center(RIGHT) + [0.1, 0, 0]  # dmem to mux wires
+        p2 = [mux.get_edge_center(LEFT)[0], p1[1], 0]
+        dmem_mux_wire = Line(p1, p2)
+        self.play(Create(dmem_mux_wire))
+
+        p1 = mux.get_edge_center(RIGHT)  # mux to wb wires
+        p2 = p1 + [0.3, 0, 0]
+        # p4 connects back to previous wb wires end...
+        p4 = wb_wire[2].get_start()
+        p3 = [p2[0], p4[1], 0]
+        l1 = Line(p1, p2)
+        l2 = Line(p2, p3)
+        l3 = Line(p3, p4)
+        mux_wb_wires = VGroup(l1, l2, l3)
+        self.play(Create(mux_wb_wires))
 
         self.wait(2)
