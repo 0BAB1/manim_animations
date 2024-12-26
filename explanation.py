@@ -1,8 +1,26 @@
 from manim import *
+# This is a very simplyfied single cycle core scheme
+# animated using manim.
+# This one does not invole an LLM as I wanted it to fit my explaination part.
+# This will be 100% used in the final edit as the core of the "nerdy part"
 
 
 class Explanation(Scene):
     def construct(self):
+        def create_mux(scene: Scene, position: list) -> VGroup:
+            # mux shape
+            mux_shape = Polygon(
+                [-0.25, 0.4, 0],
+                [0.15, 0.2, 0],
+                [0.15, -0.2, 0],
+                [-0.25, -0.4, 0],
+                fill_color=GRAY, fill_opacity=0.2, color=GRAY
+            ).shift(position)
+            mux_label = Text("MUX", font_size=8).rotate(
+                PI/2).next_to([mux_shape.get_x(), mux_shape.get_y(), mux_shape.get_z()]).shift([-0.25, 0, 0])
+            mux = VGroup(mux_shape, mux_label)
+            return mux
+
         def create_logic_unit(scene: Scene, size: float, position: list, color: ManimColor, inputs: list, outputs: list, clock: bool = False, title: str = "", inverted=False) -> VGroup:
             if not inverted:
                 w, h = 2*size, 5*size
@@ -103,7 +121,7 @@ class Explanation(Scene):
             i_text.shift([0, 0, 0])
             self.add(i_text)
 
-            self.wait(1.5)
+            self.wait(1)
 
         self.play(Uncreate(pc_text))
         self.play(Uncreate(i_text))
@@ -111,6 +129,8 @@ class Explanation(Scene):
         part1 = VGroup(pc, i_mem, l)
         self.play(part1.animate.scale(0.65))
         self.play(part1.animate.shift([-3, 0, 0]))
+
+        fetch_stage = VGroup(pc, i_mem, l)
 
         # ======================
         # CONTROL
@@ -176,7 +196,7 @@ class Explanation(Scene):
         l = Line([-0.7, p[1], 0], p)
         lines.add(l)
 
-        for i in range(1, 5):   # regfile wires
+        for i in range(1, 4):   # regfile wires
             p = regfile[i].get_edge_center(LEFT) - [0.1, 0, 0]
             l = Line([-0.7, p[1], 0], p)
             lines.add(l)
@@ -185,10 +205,123 @@ class Explanation(Scene):
         l = Line([-0.7, p[1], 0], p)
         lines.add(l)
 
+        decode_stage.add(lines, l1, demux)
+
         self.play(Create(lines))
 
-        self.wait(2)
+        self.play(fetch_stage.animate.shift([-1.5, 0, 0]),
+                  decode_stage.animate.shift([-1.5, 0, 0]))
 
-        self.play(Uncreate(lines), Uncreate(l1))
+        # ======================
+        # ALU
+        # ======================
+
+        alu_shape = Polygon(
+            [-0.5, 1, 0],
+            [0.5, 0.5, 0],
+            [0.5, -0.5, 0],
+            [-0.5, -1, 0],
+            [-0.5, -0.25, 0],
+            [-0.25, 0, 0],
+            [-0.5, 0.25, 0],
+            fill_color=BLUE, fill_opacity=0.2
+        ).shift([2.5, -0.5, 0]).scale(1.15)
+
+        alu_label = Text("ALU", font_size=16, color=WHITE)
+        alu_label.next_to(alu_shape, RIGHT).rotate(PI/2).shift([-1, 0, 0])
+
+        alu = VGroup(alu_shape, alu_label)
+
+        self.play(Create(alu))
+
+        # add mux and wires
+        mux = create_mux(self, [1.25, -1.25, 0])
+
+        lines = VGroup()
+
+        p1 = regfile[5].get_edge_center(RIGHT) + [0.1, 0, 0]  # rs1 wire
+        p2 = alu.get_edge_center(LEFT)
+        l = Line(p1, [p2[0], p1[1], 0])
+        lines.add(l)
+
+        p1 = regfile[6].get_edge_center(RIGHT) + [0.1, 0, 0]  # rs2 wire
+        p2 = mux.get_edge_center(LEFT)
+        l = Line(p1, [p2[0], p1[1], 0])
+        lines.add(l)
+
+        p1 = mux.get_edge_center(RIGHT)  # mux wire
+        p2 = alu.get_edge_center(LEFT)
+        l = Line(p1, [p2[0], p1[1], 0])
+        lines.add(l)
+
+        p1 = signext.get_edge_center(RIGHT)  # imm wires
+        p2 = p1 + [0.25, 0, 0]
+        p4 = mux.get_edge_center(LEFT) - [0, 0.25, 0]
+        p3 = [p2[0], p4[1], 0]
+        l1 = Line(p1, p2)
+        l2 = Line(p2, p3)
+        l3 = Line(p3, p4)
+        lines.add(l1)
+        lines.add(l2)
+        lines.add(l3)
+
+        self.play(Create(mux))
+        self.play(Create(lines))
+
+        # ======================
+        # DATA MEMORY
+        # ======================
+
+        d_mem = create_logic_unit(
+            self, 0.65, [4.5, -0.25, 0], RED, ["addr", "data_in", "write_enable"], ["data_out"], True, "Data memory")
+
+        # use result as an address ... 3 lines wire ...
+        p1 = alu.get_edge_center(RIGHT)
+        p2 = p1 + [0.25, 0, 0]
+        p4 = d_mem[1].get_edge_center(LEFT) - [0.1, 0, 0]
+        p3 = [p2[0], p4[1], 0]
+        l1 = Line(p1, p2)
+        l2 = Line(p2, p3)
+        l3 = Line(p3, p4)
+
+        addr_wire = VGroup(l1, l2, l3)
+        self.play(Create(addr_wire))
+
+        # data coming from register : store
+
+        p1 = regfile[6].get_edge_center(RIGHT) + [0.75, 0, 0]
+        p2 = p1 - [0, 1, 0]
+        p3 = p2 + [2.7, 0, 0]
+        p5 = d_mem[2].get_edge_center(LEFT) - [0.1, 0, 0]
+        p4 = [p3[0], p5[1], 0]
+        l1 = Line(p1, p2)
+        l2 = Line(p2, p3)
+        l3 = Line(p3, p4)
+        l4 = Line(p4, p5)
+        connection_circle = Circle(
+            0.05, WHITE, fill_color=WHITE, fill_opacity=1).move_to(p1)
+
+        d_in_wire = VGroup(connection_circle, l1, l2, l3, l4)
+        self.play(Create(d_in_wire))
+
+        # or read
+
+        p1 = d_mem[4].get_edge_center(RIGHT) + [0.1, 0, 0]
+        p2 = p1 + [0.4, 0, 0]
+        p3 = p2 - [0, 3.4, 0]
+        p6 = regfile[4].get_edge_center(LEFT) - [0.1, 0, 0]
+        p5 = p6 - [0.6, 0, 0]
+        p4 = [p5[0], p3[1], 0]
+        l1 = Line(p1, p2)
+        l2 = Line(p2, p3)
+        l3 = Line(p3, p4)
+        l4 = Line(p4, p5)
+        l5 = Line(p5, p6)
+
+        wb_wire = VGroup(l1, l2, l3, l4, l5)
+        self.play(Create(wb_wire))
+
+        # or write back !
+        self.play(Uncreate(wb_wire[0]), wb_wire[1])
 
         self.wait(2)

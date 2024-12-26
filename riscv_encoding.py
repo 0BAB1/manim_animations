@@ -1,4 +1,7 @@
 from manim import *
+# this has been llm generated, thus it is more or less bad.
+# The result is nontheless pretty good even though some stuff is to correct
+# TODO : align comas, better arrows
 
 
 class RISCVEncoding(Scene):
