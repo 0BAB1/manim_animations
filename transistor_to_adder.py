@@ -1,4 +1,6 @@
 from manim import *
+# this has been llm generated, thus it is more or less garbage. I only used an
+# extract to illustrate a sentence in the final edit.
 
 
 class TransistorToAdder(Scene):
