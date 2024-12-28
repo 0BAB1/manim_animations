@@ -123,8 +123,8 @@ class Explanation(Scene):
 
             self.wait(1)
 
-        self.play(Uncreate(pc_text))
-        self.play(Uncreate(i_text))
+        self.remove(pc_text)
+        self.remove(i_text)
 
         part1 = VGroup(pc, i_mem, l)
         self.play(part1.animate.scale(0.65))
