@@ -1,4 +1,0 @@
-manim -pql riscv_encoding.py RISCVEncoding (PREVIEW)
-python -m manim -pqh --fps 50 riscv_encoding.py RISCVEncoding (final rendering fot YT)
-python -m manim -qk -p --fps 60 transistor_to_adder.py TransistorToAdder
-python -m manim -pql ./explanation.py Explanation

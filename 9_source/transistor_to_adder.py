@@ -6,7 +6,7 @@ from manim import *
 class TransistorToAdder(Scene):
     def construct(self):
         # Set dark background
-        self.camera.background_color = "#2B2B2B"
+        self.camera.background_color = "#191919"
 
         # Helper function to create a MOSFET transistor
         def create_transistor():
